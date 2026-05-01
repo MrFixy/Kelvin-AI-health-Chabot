@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat — Kelvin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/Scripts/styles.css">
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav id="mainNav">
+    <a href="index.html" class="nav-logo">
+      <div class="logo-orb">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a10 10 0 0 1 0 20M12 2a10 10 0 0 0 0 20M2 12h8M14 12h8"/>
+        </svg>
+      </div>
+      <span>Kelvin</span>
+    </a>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="chat.html" class="nav-active">Chat</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="chat.html" class="nav-cta">New chat</a></li>
+    </ul>
+  </nav>
+
+  <!-- CHAT LAYOUT -->
+  <div class="page-wrap">
+    <div class="chat-layout">
+
+      <!-- SIDEBAR -->
+      <aside class="chat-sidebar" id="chatSidebar">
+        <div class="sidebar-head">
+          <h3>Sessions</h3>
+          <button class="new-chat-btn" id="newChatBtn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            New
+          </button>
+        </div>
+        <div class="chat-history" id="chatHistory">
+          <!-- Dynamically populated -->
+        </div>
+        <div class="sidebar-footer">
+          <p>Kelvin is an AI companion. It is not a substitute for professional mental health care. If you are in crisis, please contact a helpline.</p>
+        </div>
+      </aside>
+
+      <!-- MAIN CHAT -->
+      <div class="chat-main">
+        <div class="chat-topbar">
+          <button id="sidebarToggle" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;padding:4px;" aria-label="Toggle sidebar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink-soft)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          </button>
+          <div class="bot-status-orb"></div>
+          <h4>Kelvin</h4>
+          <span id="sessionLabel">New session</span>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <!-- Initial message injected by JS -->
+        </div>
+
+        <div class="chat-inputbar">
+          <textarea
+            class="chat-input"
+            id="chatInput"
+            placeholder="Share what's on your mind…"
+            rows="1"
+            maxlength="1000"
+          ></textarea>
+          <button class="chat-send-btn" id="sendBtn" aria-label="Send">
+            <svg viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div class="chat-disclaimer">
+          Kelvin may make mistakes. Not a crisis service — if you need urgent help, please call a professional helpline.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // KELVIN CHAT — app logic
+    // Edit SYSTEM_PROMPT below to change Kelvin's personality.
+    // ============================================================
+
+    const SYSTEM_PROMPT = `You are Kelvin, a warm, empathetic AI mental health companion. Your role is to:
+- Listen without judgment and reflect back what the user shares
+- Ask one gentle, thoughtful follow-up question at a time
+- Offer CBT-based tools, breathing exercises, or mindfulness techniques when relevant
+- Keep responses concise (2-4 short paragraphs max) and conversational
+- Gently encourage professional help when the user seems to be in serious distress
+- Never diagnose or prescribe. Never claim to be human.
+- Speak like a caring, calm friend — warm, grounded, and present.`;
+
+    // ── STATE ────────────────────────────────────────────────
+    let sessions = JSON.parse(localStorage.getItem('kelvin_sessions') || '[]');
+    let activeId  = null;
+    let isLoading = false;
+
+    // ── ELEMENTS ─────────────────────────────────────────────
+    const messagesEl  = document.getElementById('chatMessages');
+    const inputEl     = document.getElementById('chatInput');
+    const sendBtn     = document.getElementById('sendBtn');
+    const historyEl   = document.getElementById('chatHistory');
+    const newChatBtn  = document.getElementById('newChatBtn');
+    const sessionLabel= document.getElementById('sessionLabel');
+    const sidebar     = document.getElementById('chatSidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+
+    // ── HELPERS ──────────────────────────────────────────────
+    function getTime() {
+      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function saveSessions() {
+      localStorage.setItem('kelvin_sessions', JSON.stringify(sessions));
+    }
+
+    function getActiveSession() {
+      return sessions.find(s => s.id === activeId);
+    }
+
+    // ── RENDER ───────────────────────────────────────────────
+    function renderMessage(role, text, time) {
+      const row = document.createElement('div');
+      row.className = `msg-row ${role === 'user' ? 'user' : 'bot'}`;
+
+      const initial = role === 'user' ? 'You' : 'K';
+      row.innerHTML = `
+        <div class="msg-avatar ${role === 'user' ? 'user' : 'bot'}">${role === 'user' ? '👤' : '✦'}</div>
+        <div>
+          <div class="msg-bubble ${role === 'user' ? 'user' : 'bot'}">${escapeHtml(text)}</div>
+          <div class="msg-time">${time || getTime()}</div>
+        </div>
+      `;
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      return row;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                .replace(/\n/g,'<br>');
+    }
+
+    function showTyping() {
+      const row = document.createElement('div');
+      row.className = 'msg-row bot'; row.id = 'typingRow';
+      row.innerHTML = `
+        <div class="msg-avatar bot">✦</div>
+        <div class="msg-bubble bot typing-indicator">
+          <span></span><span></span><span></span>
+        </div>
+      `;
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function removeTyping() {
+      const el = document.getElementById('typingRow');
+      if (el) el.remove();
+    }
+
+    function renderHistory() {
+      historyEl.innerHTML = '';
+
+      [...sessions].reverse().forEach(s => {
+        const el = document.createElement('div');
+        el.className = `history-item${s.id === activeId ? ' active' : ''}`;
+
+        el.innerHTML = `
+          <span class="history-title">${s.title || 'New session'}</span>
+        <button class="delete-btn" title="Delete chat">✕</button>
+      `;
+
+      // Load session on click (but not when deleting)
+      el.querySelector('.history-title').onclick = () => loadSession(s.id);
+
+      // Delete button
+      el.querySelector('.delete-btn').onclick = (e) => {
+        e.stopPropagation(); // prevents loading session
+        deleteSession(s.id);
+      };
+
+      function deleteSession(id) {
+        const confirmDelete = confirm("Delete this session?");
+          if (!confirmDelete) return;
+
+          sessions = sessions.filter(s => s.id !== id);
+
+  // If deleting current session, switch to another
+          if (id === activeId) {
+            if (sessions.length > 0) {
+              loadSession(sessions[sessions.length - 1].id);
+          } else {
+            startNewSession();
+          }
+        }
+
+        saveSessions();
+        renderHistory();
+      }
+
+      historyEl.appendChild(el);
+    });
+  }
+
+    // ── SESSION MANAGEMENT ───────────────────────────────────
+    function startNewSession() {
+      const id = Date.now().toString();
+      const session = { id, title: 'New session', messages: [], createdAt: getTime() };
+      sessions.push(session);
+      saveSessions();
+      loadSession(id);
+    }
+
+    function loadSession(id) {
+      activeId = id;
+      const session = getActiveSession();
+      messagesEl.innerHTML = '';
+      sessionLabel.textContent = session.title;
+
+      if (session.messages.length === 0) {
+        // Welcome message
+        const welcome = `Hi there 👋 I'm Kelvin, your mental health companion. Whatever's on your mind today — I'm here to listen, no judgement. How are you feeling?`;
+        renderMessage('assistant', welcome, getTime());
+        session.messages.push({ role: 'assistant', content: welcome });
+        saveSessions();
+      } else {
+        session.messages.forEach(m => renderMessage(m.role, m.content));
+      }
+
+      renderHistory();
+    }
+
+    // ── SEND MESSAGE ─────────────────────────────────────────
+  function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text || isLoading) return;
+
+    const session = getActiveSession();
+    if (!session) return;
+
+  // Add user message
+    session.messages.push({ role: 'user', content: text });
+    renderMessage('user', text);
+    inputEl.value = '';
+    inputEl.style.height = 'auto';
+
+    if (session.messages.filter(m => m.role === 'user').length === 1) {
+      session.title = text.length > 40 ? text.slice(0, 40) + '…' : text;
+      sessionLabel.textContent = session.title;
+    }
+
+    saveSessions();
+    renderHistory();
+
+    isLoading = true;
+    sendBtn.disabled = true;
+    showTyping();
+
+    // Offline rule-based response engine
+    setTimeout(() => {
+      removeTyping();
+      const reply = kelvinsReply(text, session.messages);
+      session.messages.push({ role: 'assistant', content: reply });
+      renderMessage('assistant', reply);
+      saveSessions();
+      isLoading = false;
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }, 900 + Math.random() * 600); // slight delay feels natural
+  }
+
+  // ── KELVIN OFFLINE BRAIN ─────────────────────────────────
+  function kelvinsReply(input, history) {
+    const t = input.toLowerCase();
+    const msgCount = history.filter(m => m.role === 'user').length;
+
+    // Crisis detection — always first
+    if (/\b(suicid|kill myself|end my life|don't want to (be here|live)|self.harm|hurt myself)\b/.test(t)) {
+      return "I'm really glad you told me that, and I want you to know I'm taking it seriously. Please reach out to a crisis helpline right now — iCall: 9152987821 (India) or iCall.tiss.edu. You don't have to face this alone. 💙";
+    }
+
+    // Greetings
+    if (msgCount <= 1 && /^(hi|hello|hey|yo|sup|good (morning|evening|afternoon)|hiya)/.test(t)) {
+      return "Hey, I'm really glad you're here 😊 I'm Kelvin. How are you feeling today? There's no right or wrong answer.";
+    }
+
+    // Gratitude
+    if (/\b(thank(s| you)|you('re| are) (great|amazing|helpful|the best))\b/.test(t)) {
+      return "That means a lot — truly. I'm here whenever you need to talk. How are you feeling right now, in this moment?";
+    }
+
+    // Anxiety / stress
+    if (/\b(anxious|anxiety|stressed|stress|overwhelm|panic|nervous|worry|worrying|can't stop thinking)\b/.test(t)) {
+      const picks = [
+        "Anxiety can feel like a lot at once. Let's slow things down — what feels most overwhelming right now? Just one thing.",
+        "When everything feels urgent at once, it helps to pause. Try this: breathe in for 4 counts, hold for 4, out for 6. Do it twice. Then tell me what's on your mind.",
+        "Stress tends to be loudest when we're least expecting it. What's been piling up lately?",
+        "That anxious feeling is your body trying to protect you — but sometimes it overdoes it. What triggered it today, do you think?"
+      ];
+      return picks[Math.floor(Math.random() * picks.length)];
+    }
+
+    // Sadness / depression
+    if (/\b(sad|depress(ed|ion)|unhappy|cry|crying|tears|hopeless|empty|numb|low|down|miserable)\b/.test(t)) {
+      const picks = [
+        "I hear you. Feeling sad is exhausting in a way most people don't talk about. Would you like to share what's been going on?",
+        "That heaviness you're describing — it's real, and it matters. You don't have to carry it alone. What's been hardest lately?",
+        "Sometimes sadness doesn't have a single cause — it just settles in. How long have you been feeling this way?",
+        "It takes something to even say that out loud. I'm here. What does a typical day feel like for you right now?"
+      ];
+      return picks[Math.floor(Math.random() * picks.length)];
+    }
+
+    // Anger / frustration
+    if (/\b(angry|anger|furious|rage|frustrated|frustrat|irritat|annoyed|hate|mad)\b/.test(t)) {
+      const picks = [
+        "That frustration sounds real. What happened — do you want to walk me through it?",
+        "Anger usually has something underneath it. What's going on?",
+        "It's okay to feel this way. What set it off today?",
+        "Sometimes the best thing is to just say it. What are you most angry about right now?"
+      ];
+      return picks[Math.floor(Math.random() * picks.length)];
+    }
+
+    // Loneliness
+    if (/\b(lonely|alone|no one|nobody|isolated|no friends|no one cares|don't belong)\b/.test(t)) {
+      return "Feeling alone is one of the hardest things. I want you to know that right now, in this conversation, you're not. What's been making you feel this way?";
+    }
+
+    // Sleep issues
+    if (/\b(can't sleep|insomnia|sleep(less| problems| issues)|awake at night|up all night|tired all the time)\b/.test(t)) {
+      return "Poor sleep and mental health are so tightly linked — one feeds the other. How long has this been going on? And is your mind busy when you try to sleep, or is it something else?";
+    }
+
+    // Breathing exercise request
+    if (/\b(breath(e|ing)|calm( me| down)?|relax|exercise|technique|help me feel better)\b/.test(t)) {
+      return "Let's try the 4-7-8 technique together:\n\n1. Breathe IN through your nose for 4 counts.\n2. HOLD for 7 counts.\n3. Breathe OUT slowly through your mouth for 8 counts.\n\nDo that 3 times. I'll be here when you're done. How do you feel after?";
+    }
+
+    // Positive / good day
+    if (/\b(great|good|amazing|fantastic|happy|excited|wonderful|best day|feeling (good|better|well))\b/.test(t)) {
+      return "That's genuinely lovely to hear 😊 What's been going well? I'd love to hear about it.";
+    }
+
+    // Professional help nudge
+    if (/\b(therapist|therapy|psychiatrist|counsell|professional help|medication|doctor)\b/.test(t)) {
+      return "It's really thoughtful that you're thinking about professional support — that kind of self-awareness takes courage. If you'd like, I can share some tips on finding a therapist that fits your needs and budget. Would that help?";
+    }
+
+    // Short / vague messages
+    if (t.length < 15) {
+      const vague = [
+        "I'm here — tell me a little more. What's on your mind?",
+        "Take your time. I'm listening.",
+        "What's brought you here today?",
+        "There's no rush. What would you like to talk about?"
+      ];
+      return vague[Math.floor(Math.random() * vague.length)];
+    }
+
+    // Follow-up questions — varies by how far into conversation
+    const followUps = [
+      "That sounds like a lot to carry. How long have you been feeling this way?",
+      "Thank you for sharing that with me. What part of this feels heaviest right now?",
+      "I appreciate you telling me. What do you think is at the root of it?",
+      "That makes sense. Have you been able to talk to anyone else about this?",
+      "I hear you. What would feel like even a small step forward for you today?",
+      "It sounds like you've been dealing with this for a while. What's kept you going?",
+      "You're not alone in feeling this way. What would help you most right now — talking it through, or a calming exercise?"
+    ];
+    return followUps[msgCount % followUps.length];
+  }
+    // ── AUTO-RESIZE TEXTAREA ─────────────────────────────────
+    inputEl.addEventListener('input', () => {
+      inputEl.style.height = 'auto';
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 140) + 'px';
+    });
+
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+    newChatBtn.addEventListener('click', startNewSession);
+
+    // Sidebar toggle
+    sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+    // ── INIT ─────────────────────────────────────────────────
+    if (sessions.length === 0) {
+      startNewSession();
+    } else {
+      loadSession(sessions[sessions.length - 1].id);
+    }
+  </script>
+  <script src="/Style/app.js"></script>
+</body>
+</html>

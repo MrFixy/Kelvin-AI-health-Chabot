@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelvin — Your AI Mental Health Companion</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/Scripts/styles.css">
+  <style>
+    /* ── INDEX-ONLY STYLES ──────────────────────────────── */
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: grid; grid-template-columns: 1fr 1fr;
+      align-items: center; padding: 8rem 4rem 4rem; gap: 4rem;
+      position: relative;
+    }
+    .hero-blob {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: 0.35; pointer-events: none;
+    }
+    .blob-1 { width: 500px; height: 500px; background: var(--sage-lt); top: 10%; right: -100px; }
+    .blob-2 { width: 300px; height: 300px; background: var(--sky-lt); bottom: 10%; left: 5%; }
+    .hero-text { position: relative; z-index: 1; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; font-weight: 500; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--sage-dk);
+      background: rgba(122,158,135,0.12); padding: 0.35rem 0.9rem;
+      border-radius: var(--radius-full); margin-bottom: 1.5rem;
+      animation: fadeUp 0.8s ease both;
+    }
+    .eyebrow-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--sage); animation: pulse 2s ease infinite;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.8rem, 5vw, 4.2rem);
+      line-height: 1.1; letter-spacing: -0.03em; color: var(--ink);
+      margin-bottom: 1.5rem; animation: fadeUp 0.8s 0.1s ease both;
+    }
+    .hero-title em { font-style: italic; color: var(--sage-dk); }
+    .hero-subtitle {
+      font-size: 1.05rem; color: var(--ink-soft); line-height: 1.7;
+      max-width: 460px; margin-bottom: 2.5rem;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+    .hero-actions {
+      display: flex; gap: 1rem; align-items: center;
+      animation: fadeUp 0.8s 0.3s ease both;
+    }
+    .hero-visual { position: relative; z-index: 1; display: flex; justify-content: center; }
+    .chat-preview {
+      background: white; border-radius: 1.8rem;
+      padding: 1.5rem; width: 100%; max-width: 400px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(122,158,135,0.15);
+      animation: fadeUp 0.8s 0.4s ease both;
+    }
+    .preview-header {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--warm);
+      margin-bottom: 1.2rem;
+    }
+    .preview-orb {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--sage), var(--sky));
+      display: flex; align-items: center; justify-content: center;
+    }
+    .preview-orb svg { width: 18px; height: 18px; stroke: white; }
+    .preview-name { font-weight: 500; font-size: 0.92rem; color: var(--ink); }
+    .preview-status { font-size: 0.75rem; color: var(--sage-dk); display: flex; align-items: center; gap: 0.3rem; }
+    .preview-status::before { content:''; width: 7px; height: 7px; border-radius: 50%; background: #4caf7d; display: inline-block; }
+    .preview-msgs { display: flex; flex-direction: column; gap: 0.9rem; }
+    .preview-msg {
+      max-width: 85%; padding: 0.7rem 0.95rem;
+      border-radius: 1rem; font-size: 0.88rem; line-height: 1.5;
+    }
+    .preview-msg.bot { background: var(--mist); color: var(--ink); border-bottom-left-radius: 4px; }
+    .preview-msg.user { background: var(--sage-dk); color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
+    .preview-input {
+      margin-top: 1rem; background: var(--mist); border-radius: var(--radius-full);
+      padding: 0.65rem 1rem; font-size: 0.82rem; color: var(--ink-faint);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .preview-send {
+      width: 28px; height: 28px; border-radius: 50%; background: var(--sage-dk);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .preview-send svg { width: 13px; height: 13px; stroke: white; }
+
+    /* Features */
+    .features {
+      padding: 6rem 4rem; max-width: 1200px; margin: 0 auto;
+    }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 0.5rem;
+    }
+    .feature-card {
+      background: white; border-radius: 1.4rem; padding: 2rem;
+      box-shadow: var(--shadow-sm); border: 1px solid rgba(122,158,135,0.1);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 1.2rem;
+    }
+    .feature-icon svg { width: 24px; height: 24px; }
+    .icon-sage  { background: rgba(122,158,135,0.15); }
+    .icon-sky   { background: rgba(154,184,212,0.2); }
+    .icon-accent{ background: rgba(201,125,90,0.12); }
+    .feature-title {
+      font-family: var(--font-display); font-size: 1.05rem;
+      color: var(--ink); margin-bottom: 0.6rem; letter-spacing: -0.01em;
+    }
+    .feature-text { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.65; }
+
+    /* Stats bar */
+    .stats-bar {
+      background: var(--sage-dk); color: white;
+      display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
+    }
+    .stats-bar > div {
+      padding: 2.5rem 3.5rem; text-align: center;
+      border-right: 1px solid rgba(255,255,255,0.12);
+    }
+    .stats-bar > div:last-child { border-right: none; }
+    .stat-num {
+      font-family: var(--font-display); font-size: 2.2rem;
+      letter-spacing: -0.03em;
+    }
+    .stat-label { font-size: 0.82rem; opacity: 0.75; margin-top: 0.3rem; max-width: 140px; }
+
+    /* How it works */
+    .how { padding: 6rem 4rem; max-width: 1000px; margin: 0 auto; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 3rem; }
+    .step { position: relative; }
+    .step-num {
+      font-family: var(--font-display); font-size: 3rem;
+      color: var(--sage-lt); letter-spacing: -0.05em; line-height: 1; margin-bottom: 1rem;
+    }
+    .step-title { font-family: var(--font-display); font-size: 1.1rem; color: var(--ink); margin-bottom: 0.6rem; }
+    .step-text { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.65; }
+
+    /* Testimonials */
+    .testimonials { padding: 6rem 4rem; background: var(--warm); }
+    .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
+    .testi-card {
+      background: white; border-radius: 1.4rem; padding: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .stars { margin-bottom: 1rem; }
+    .star { color: #f5a623; font-size: 0.95rem; }
+    .testi-text { font-size: 0.9rem; color: var(--ink-soft); line-height: 1.7; margin-bottom: 1.5rem; font-style: italic; }
+    .testi-author { display: flex; align-items: center; gap: 0.75rem; }
+    .testi-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 600; color: white;
+    }
+    .av-1 { background: var(--sage); }
+    .av-2 { background: var(--sky); }
+    .av-3 { background: var(--accent); }
+    .testi-name { font-weight: 500; font-size: 0.88rem; color: var(--ink); }
+    .testi-since { font-size: 0.78rem; color: var(--ink-faint); }
+
+    /* CTA */
+    .cta-section {
+      padding: 7rem 4rem; text-align: center;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(200,221,208,0.4) 0%, transparent 70%);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; padding: 7rem 2rem 3rem; }
+      .hero-visual { display: none; }
+      .features-grid, .testi-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .features, .how, .testimonials, .cta-section { padding: 4rem 1.5rem; }
+      .stats-bar > div { padding: 1.8rem 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav id="mainNav">
+    <a href="index.html" class="nav-logo">
+      <div class="logo-orb">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a10 10 0 0 1 0 20M12 2a10 10 0 0 0 0 20M2 12h8M14 12h8"/>
+        </svg>
+      </div>
+      <span>Kelvin</span>
+    </a>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="nav-active">Home</a></li>
+      <li><a href="chat.html">Chat</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="chat.html" class="nav-cta">Start chatting</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-blob blob-1"></div>
+    <div class="hero-blob blob-2"></div>
+
+    <div class="hero-text">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-dot"></span>
+        AI Mental Health Support
+      </div>
+      <h1 class="hero-title">
+        A calmer mind<br>starts with a<br><em>gentle conversation</em>
+      </h1>
+      <p class="hero-subtitle">
+        Kelvin is your compassionate AI companion — available any time you need to talk, reflect, or just breathe. No waiting rooms. No judgement.
+      </p>
+      <div class="hero-actions">
+        <a href="chat.html" class="btn-primary">
+          Talk to Kelvin
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="about.html" class="btn-ghost">Meet the team</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="chat-preview">
+        <div class="preview-header">
+          <div class="preview-orb">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 0 1 0 20M12 2a10 10 0 0 0 0 20M2 12h8M14 12h8"/>
+            </svg>
+          </div>
+          <div>
+            <div class="preview-name">Kelvin</div>
+            <div class="preview-status">Online now</div>
+          </div>
+        </div>
+        <div class="preview-msgs">
+          <div class="preview-msg bot">Hi there 👋 How are you feeling today?</div>
+          <div class="preview-msg user">Honestly, a bit overwhelmed lately.</div>
+          <div class="preview-msg bot">I hear you. Would you like to talk about what's been on your mind, or would a short breathing exercise help first?</div>
+        </div>
+        <div class="preview-input">
+          <span>Type your message…</span>
+          <div class="preview-send">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <p class="section-label reveal">What Kelvin offers</p>
+    <h2 class="section-title reveal">Support that actually fits your life</h2>
+    <p class="section-sub reveal">No appointments. No waiting rooms. Just genuine support whenever you need it most.</p>
+
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-sage">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage-dk)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3 class="feature-title">Empathetic Conversations</h3>
+        <p class="feature-text">Kelvin listens without judgment, asks thoughtful questions, and helps you explore your emotions safely — at any hour.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-sky">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <h3 class="feature-title">Guided Mindfulness</h3>
+        <p class="feature-text">From breathing exercises to body scans, Kelvin guides you through evidence-based techniques to restore calm in minutes.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-accent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <h3 class="feature-title">Mood Journaling</h3>
+        <p class="feature-text">Track how you're feeling over time. Kelvin identifies patterns, celebrates progress, and gently flags when extra support may help.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-sage">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sage-dk)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3 class="feature-title">Private & Secure</h3>
+        <p class="feature-text">Your conversations are end-to-end encrypted. Kelvin will never share your data. What you say here, stays here.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-sky">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>
+        </div>
+        <h3 class="feature-title">CBT-Informed Tools</h3>
+        <p class="feature-text">Kelvin uses techniques grounded in Cognitive Behavioral Therapy to help you challenge negative thinking and build healthier habits.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-accent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3 class="feature-title">Therapist Referrals</h3>
+        <p class="feature-text">When deeper support is needed, Kelvin helps connect you with licensed professionals — AI is a complement, not a replacement.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="reveal"><div class="stat-num">94%</div><div class="stat-label">reported feeling less anxious after 2 weeks</div></div>
+    <div class="reveal"><div class="stat-num">250k+</div><div class="stat-label">conversations supported this year</div></div>
+    <div class="reveal"><div class="stat-num">24/7</div><div class="stat-label">always available, no waiting</div></div>
+    <div class="reveal"><div class="stat-num">4.9★</div><div class="stat-label">average user satisfaction rating</div></div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <p class="section-label reveal">The process</p>
+    <h2 class="section-title reveal">Simple to start, powerful over time</h2>
+    <p class="section-sub reveal">Getting meaningful support shouldn't require a long sign-up form or a month-long waitlist.</p>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">01</div>
+        <h3 class="step-title">Share how you're feeling</h3>
+        <p class="step-text">Open up at your own pace. Kelvin adapts to your mood — whether you want to vent, reflect quietly, or just not be alone.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">02</div>
+        <h3 class="step-title">Get personalised support</h3>
+        <p class="step-text">Kelvin learns what helps you most — guided exercises, conversation, or quiet company — and tailors every session accordingly.</p>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">03</div>
+        <h3 class="step-title">Build lasting wellbeing</h3>
+        <p class="step-text">Track your mood over time, celebrate small wins, and develop real coping skills that travel with you long after each conversation ends.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials" id="reviews">
+    <p class="section-label reveal" style="display:block;text-align:center;">Stories</p>
+    <h2 class="section-title reveal" style="text-align:center;">What people are saying</h2>
+    <p class="section-sub reveal" style="text-align:center;margin:0 auto 3rem;">Real experiences from people who turned to Kelvin on hard days.</p>
+
+    <!-- Reviews display -->
+    <div class="testi-grid" id="reviewsGrid">
+      <!-- Seeded + user reviews rendered by JS -->
+    </div>
+
+    <!-- Submit a review -->
+    <div class="review-form-wrap reveal">
+      <h3 class="review-form-title">Share your experience</h3>
+      <p class="review-form-sub">Your story might help someone else take that first step.</p>
+
+      <div class="review-form">
+        <div class="review-form-row">
+          <div class="review-field">
+            <label for="rv-name">Your name</label>
+            <input type="text" id="rv-name" placeholder="e.g. Jamie T." maxlength="40">
+          </div>
+          <div class="review-field">
+            <label>Rating</label>
+            <div class="star-picker" id="starPicker">
+              <span data-v="1">★</span>
+              <span data-v="2">★</span>
+              <span data-v="3">★</span>
+              <span data-v="4">★</span>
+              <span data-v="5">★</span>
+            </div>
+          </div>
+        </div>
+        <div class="review-field">
+          <label for="rv-text">Your review</label>
+          <textarea id="rv-text" placeholder="Tell us how Kelvin helped you…" maxlength="300" rows="3"></textarea>
+        </div>
+        <button class="btn-primary" id="submitReview" style="width:100%;justify-content:center;">
+          Post review
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <p class="review-notice" id="reviewNotice"></p>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .review-form-wrap {
+      max-width: 580px; margin: 3rem auto 0;
+      background: white; border-radius: 1.4rem; padding: 2rem;
+      box-shadow: var(--shadow-sm); border: 1px solid rgba(122,158,135,0.12);
+    }
+    .review-form-title { font-family: var(--font-display); font-size: 1.3rem; color: var(--ink); margin-bottom: 0.3rem; }
+    .review-form-sub { font-size: 0.85rem; color: var(--ink-soft); margin-bottom: 1.5rem; }
+    .review-form-row { display: flex; gap: 1rem; margin-bottom: 1rem; }
+    .review-field { display: flex; flex-direction: column; gap: 0.4rem; flex: 1; }
+    .review-field label { font-size: 0.8rem; font-weight: 500; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; }
+    .review-field input, .review-field textarea {
+      border: 1px solid rgba(122,158,135,0.25); border-radius: 0.75rem;
+      padding: 0.65rem 0.9rem; font-family: var(--font-body); font-size: 0.9rem;
+      color: var(--ink); background: var(--mist); outline: none; transition: border var(--transition);
+      resize: none;
+    }
+    .review-field input:focus, .review-field textarea:focus { border-color: var(--sage); background: white; }
+    .star-picker { display: flex; gap: 0.15rem; font-size: 1.6rem; cursor: pointer; }
+    .star-picker span { color: #ddd; transition: color 0.15s; }
+    .star-picker span.lit { color: #f5a623; }
+    .review-notice { text-align: center; font-size: 0.82rem; margin-top: 0.75rem; min-height: 1.2em; }
+    .review-notice.success { color: var(--sage-dk); }
+    .review-notice.error { color: #c0392b; }
+    .testi-card.user-review { border: 1px solid rgba(122,158,135,0.18); }
+    @media (max-width: 600px) { .review-form-row { flex-direction: column; } }
+  </style>
+
+  <script>
+  (function() {
+    const SEED_REVIEWS = [
+      { name: "Sara M.", initials: "SM", rating: 5, text: "I was sceptical about AI therapy, but Kelvin genuinely changed how I handle stress. It's like having a calm, wise friend available at 2am when my anxiety spikes.", color: "var(--sage)" },
+      { name: "James K.", initials: "JK", rating: 5, text: "The breathing exercises and mood tracking have helped me recognise patterns I never noticed before. I actually look forward to my morning check-ins now.", color: "var(--sky)" },
+      { name: "Ria P.", initials: "RP", rating: 5, text: "As someone who couldn't afford weekly therapy, Kelvin bridged such an important gap. It never replaced my therapist — it made every session I could afford go further.", color: "var(--accent)" },
+    ];
+
+    const COLORS = ["var(--sage)","var(--sky)","var(--accent)","var(--sage-dk)"];
+    let userReviews = JSON.parse(localStorage.getItem('kelvin_reviews') || '[]');
+    let selectedRating = 0;
+
+    function initials(name) {
+      return name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+    }
+
+    function starsHtml(n) {
+      return '★'.repeat(n) + '☆'.repeat(5 - n);
+    }
+
+    function renderCard(r, isUser) {
+      const card = document.createElement('div');
+      card.className = 'testi-card reveal' + (isUser ? ' user-review' : '');
+      card.innerHTML = `
+        <div class="stars"><span class="star" style="color:#f5a623">${starsHtml(r.rating)}</span></div>
+        <p class="testi-text">"${r.text}"</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:${r.color || COLORS[Math.floor(Math.random()*COLORS.length)]}">${r.initials || initials(r.name)}</div>
+          <div><p class="testi-name">${r.name}</p><p class="testi-since">${r.since || 'Kelvin user'}</p></div>
+        </div>
+      `;
+      return card;
+    }
+
+    function renderAll() {
+      const grid = document.getElementById('reviewsGrid');
+      grid.innerHTML = '';
+      const all = [...SEED_REVIEWS, ...userReviews];
+      all.forEach((r, i) => {
+        const card = renderCard(r, i >= SEED_REVIEWS.length);
+        grid.appendChild(card);
+        setTimeout(() => card.classList.add('visible'), i * 80);
+      });
+    }
+
+    // Star picker
+    const picker = document.getElementById('starPicker');
+    picker.querySelectorAll('span').forEach(s => {
+      s.addEventListener('mouseenter', () => {
+        const v = +s.dataset.v;
+        picker.querySelectorAll('span').forEach(x => x.classList.toggle('lit', +x.dataset.v <= v));
+      });
+      s.addEventListener('click', () => { selectedRating = +s.dataset.v; });
+    });
+    picker.addEventListener('mouseleave', () => {
+      picker.querySelectorAll('span').forEach(x => x.classList.toggle('lit', +x.dataset.v <= selectedRating));
+    });
+
+    // Submit
+    document.getElementById('submitReview').addEventListener('click', () => {
+      const name = document.getElementById('rv-name').value.trim();
+      const text = document.getElementById('rv-text').value.trim();
+      const notice = document.getElementById('reviewNotice');
+
+      if (!name) { notice.className = 'review-notice error'; notice.textContent = 'Please enter your name.'; return; }
+      if (!selectedRating) { notice.className = 'review-notice error'; notice.textContent = 'Please pick a star rating.'; return; }
+      if (text.length < 10) { notice.className = 'review-notice error'; notice.textContent = 'Please write at least 10 characters.'; return; }
+
+      const review = {
+        name, text, rating: selectedRating,
+        initials: initials(name),
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        since: 'Kelvin user'
+      };
+      userReviews.push(review);
+      localStorage.setItem('kelvin_reviews', JSON.stringify(userReviews));
+
+      document.getElementById('rv-name').value = '';
+      document.getElementById('rv-text').value = '';
+      selectedRating = 0;
+      picker.querySelectorAll('span').forEach(x => x.classList.remove('lit'));
+
+      notice.className = 'review-notice success';
+      notice.textContent = '✓ Thank you! Your review has been posted.';
+      setTimeout(() => { notice.textContent = ''; }, 4000);
+
+      renderAll();
+      document.getElementById('reviewsGrid').lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    renderAll();
+  })();
+  </script>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <p class="section-label reveal" style="display:block;">Ready?</p>
+    <h2 class="section-title reveal" style="text-align:center;">You deserve to feel better</h2>
+    <p class="section-sub reveal" style="text-align:center;margin:0 auto 2rem;">Start a conversation with Kelvin today — no sign-up required, no strings attached.</p>
+    <a href="chat.html" class="btn-primary reveal" style="display:inline-flex;">
+      Begin your first session
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <p style="margin-top:1rem;font-size:0.8rem;color:var(--ink-soft);">If you're in crisis, please contact a professional helpline immediately.</p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <a href="index.html" class="nav-logo">
+      <div class="logo-orb" style="width:28px;height:28px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 0 20M12 2a10 10 0 0 0 0 20M2 12h8M14 12h8"/></svg>
+      </div>
+      <span>Kelvin</span>
+    </a>
+    <ul class="footer-links">
+      <li><a href="#">Privacy</a></li>
+      <li><a href="#">Terms</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+    <p>© 2025 Kelvin. Not a substitute for professional care.</p>
+  </footer>
+
+  <script src="/Style/app.js"></script>
+</body>
+</html>

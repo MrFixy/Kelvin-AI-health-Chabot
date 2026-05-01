@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Kelvin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/Scripts/styles.css">
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    // ── EMAILJS SETUP ────────────────────────────────────────
+    // 1. Go to https://www.emailjs.com and create a FREE account
+    // 2. Add an Email Service (Gmail works great) → copy your Service ID
+    // 3. Create an Email Template → copy your Template ID
+    //    Template variables to use: {{from_name}}, {{from_email}}, {{subject}}, {{message}}
+    // 4. Go to Account → API Keys → copy your Public Key
+    // Then paste the three values below:
+    const EMAILJS_PUBLIC_KEY  = "YOUR_PUBLIC_KEY";   // e.g. "abc123XYZ"
+    const EMAILJS_SERVICE_ID  = "YOUR_SERVICE_ID";   // e.g. "service_kelvin"
+    const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";  // e.g. "template_contact"
+
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+  </script>
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav id="mainNav">
+    <a href="index.html" class="nav-logo">
+      <div class="logo-orb">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a10 10 0 0 1 0 20M12 2a10 10 0 0 0 0 20M2 12h8M14 12h8"/>
+        </svg>
+      </div>
+      <span>Kelvin</span>
+    </a>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="chat.html">Chat</a></li>
+      <li><a href="contact.html" class="nav-active">Contact</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="chat.html" class="nav-cta">Start chatting</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-wrap">
+    <div class="contact-section">
+      <p class="section-label reveal">Get in touch</p>
+      <h1 class="section-title reveal">Contact us</h1>
+      <p class="section-sub reveal">Have a question, feedback, or partnership inquiry? Send us a message and we'll get back to you.</p>
+
+      <div class="contact-card reveal">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="your@email.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" name="subject" placeholder="What's this about?">
+        </div>
+
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" placeholder="Tell us what's on your mind…"></textarea>
+        </div>
+
+        <button class="btn-primary" id="submitBtn" style="width:100%;justify-content:center;">
+          Send message
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+
+        <div class="form-status" id="formStatus"></div>
+
+        <div class="contact-info">
+          <p>Or reach us directly at <a href="mailto:Us3l3ss28@gmail.com">Us3l3ss28@gmail.com</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <a href="index.html" class="nav-logo">
+        <div class="logo-orb" style="width:28px;height:28px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 0 20M12 2a10 10 0 0 0 0 20M2 12h8M14 12h8"/></svg>
+        </div>
+        <span>Kelvin</span>
+      </a>
+      <ul class="footer-links">
+        <li><a href="#">Privacy</a></li>
+        <li><a href="#">Terms</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="about.html">About</a></li>
+      </ul>
+      <p>© 2025 Kelvin. Not a substitute for professional care.</p>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('submitBtn').addEventListener('click', function() {
+      const name    = document.getElementById('name').value.trim();
+      const email   = document.getElementById('email').value.trim();
+      const subject = document.getElementById('subject').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const status  = document.getElementById('formStatus');
+      const btn     = this;
+
+      // Validation
+      if (!name || !email || !message) {
+        status.className = 'form-status error';
+        status.textContent = 'Please fill in your name, email, and message.';
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        status.className = 'form-status error';
+        status.textContent = 'Please enter a valid email address.';
+        return;
+      }
+      if (EMAILJS_PUBLIC_KEY === "YOUR_PUBLIC_KEY") {
+        status.className = 'form-status error';
+        status.textContent = '⚠ EmailJS not configured yet. See the setup instructions in contact.html.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      status.className = '';
+      status.textContent = '';
+
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        from_name:  name,
+        from_email: email,
+        subject:    subject || '(No subject)',
+        message:    message,
+        reply_to:   email,
+      }).then(() => {
+        status.className = 'form-status success';
+        status.textContent = '✓ Message sent! We\'ll be in touch soon.';
+        document.getElementById('name').value    = '';
+        document.getElementById('email').value   = '';
+        document.getElementById('subject').value = '';
+        document.getElementById('message').value = '';
+        btn.disabled = false;
+        btn.innerHTML = 'Send message <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      }, (err) => {
+        status.className = 'form-status error';
+        status.textContent = 'Something went wrong. Please try emailing us directly.';
+        console.error('EmailJS error:', err);
+        btn.disabled = false;
+        btn.innerHTML = 'Send message <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      });
+    });
+  </script>
+  <script src="/Style/app.js"></script>
+</body>
+</html>
