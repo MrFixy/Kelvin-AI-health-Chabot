@@ -135,13 +135,7 @@ const EMAILJS_TEMPLATE_ID = "your_template_id";
 
 ---
 
-## Team
 
-| Name | Role |
-|------|------|
-| Rudra Caulfield | Web Creator · UI Designer · Strategist |
-| Dhairya Letham | Product Thinker · Storm Brainer |
-| Dhruv Blinde | Developer · Systems |
 
 ---
 
